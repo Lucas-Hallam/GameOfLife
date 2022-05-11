@@ -1,83 +1,130 @@
-import de.bezier.guido.*;
-//Declare and initialize constants NUM_ROWS and NUM_COLS = 20
-private Life[][] buttons; //2d array of Life buttons each representing one cell
-private boolean[][] buffer; //2d array of booleans to store state of buttons array
-private boolean running = true; //used to start and stop program
-
-public void setup () {
-  size(400, 400);
-  frameRate(6);
-  // make the manager
-  Interactive.make( this );
-
-  //your code to initialize buttons goes here
-
-  //your code to initialize buffer goes here
+public static final int RowCells = 20;
+public static final int ColCells = 20;
+public int i = 0;
+public boolean on = false;
+public boolean cellDraw = false;
+public Cell [][] cells = new Cell [RowCells][ColCells];
+public Cell [][] oldCells = new Cell [RowCells][ColCells];
+void setup() {
+  size(800, 800);
+  background(255);
+  for (int r = 0; r < cells.length; r++) {
+    for (int c = 0; c < cells[r].length; c++) {
+      cells[r][c] = new Cell(r, c);
+    }
+  }
+  for (int r = 0; r < cells.length; r++) {
+    for (int c = 0; c < cells[r].length; c++) {
+      oldCells[r][c] = new Cell(r, c);
+    }
+  }
+  for (int r = 0; r < cells.length; r++) {
+        for (int c = 0; c < cells[r].length; c++) {
+          cells[r][c].show();
+        }
+      }
+}
+public void draw() {
+  if (cellDraw && on == false) {
+    for (int r = 0; r < cells.length; r++) {
+      for (int c = 0; c < cells[r].length; c++) {
+        if (cells[r][c].mouseIn()) {
+          cells[r][c].setLive(true);
+          cells[r][c].show();
+        }
+      }
+    }
+  }
+  if (i == 0) {
+    if (on) {
+      background(255);
+      for (int r = 0; r < cells.length; r++) {
+        for (int c = 0; c < cells[r].length; c++) {
+          oldCells[r][c].setLive(cells[r][c].getLive());
+        }
+      }
+      for (int r = 0; r < cells.length; r++) {
+        for (int c = 0; c < cells[r].length; c++) {
+          cells[r][c].recalculate();
+        }
+      }
+      for (int r = 0; r < cells.length; r++) {
+        for (int c = 0; c < cells[r].length; c++) {
+          cells[r][c].show();
+        }
+      }
+    }
+  } else if (i == 2) {
+    i = -1;
+  }
+  i++;
 }
 
-public void draw () {
-  background( 0 );
-  if (running == false) //pause the program
-    return;
-  copyFromButtonsToBuffer();
-
-  //use nested loops to draw the buttons here
-
-  copyFromBufferToButtons();
+public void mousePressed() {
+  cellDraw = !cellDraw;
 }
-
 public void keyPressed() {
-  //your code here
+  on = !on;
 }
-
-public void copyFromBufferToButtons() {
-  //your code here
-}
-
-public void copyFromButtonsToBuffer() {
-  //your code here
-}
-
-public boolean isValid(int r, int c) {
-  //your code here
-  return false;
-}
-
-public int countNeighbors(int row, int col) {
-  int neighbors = 0;
-  //your code here
-  return neighbors;
-}
-
-public class Life {
-  private int myRow, myCol;
-  private float x, y, width, height;
+public class Cell {
   private boolean alive;
-
-  public Life (int row, int col) {
-    // width = 400/NUM_COLS;
-    // height = 400/NUM_ROWS;
-    myRow = row;
-    myCol = col; 
-    x = myCol*width;
-    y = myRow*height;
-    alive = Math.random() < .5; // 50/50 chance cell will be alive
-    Interactive.add( this ); // register it with the manager
+  private int myColor;
+  private double myX;
+  private double myY;
+  private int row;
+  private int col;
+  public Cell(int r, int c) {
+     alive = false;
+     row = r;
+     col = c;
+     myX = 800*c/ColCells;
+     myY = 800*r/RowCells;
   }
-
-  // called by manager
-  public void mousePressed () {
-    alive = !alive; //turn cell on and off with mouse press
+  public boolean getLive() {
+    return alive;
   }
-  public void draw () {    
-    fill(alive ? 200 : 100);
-    rect(x, y, width, height);
+  public void setLive(boolean l) {
+    alive = l;
   }
-  public boolean getLife() {
-    //replace the code one line below with your code
+  public void recalculate() {
+    if (alive && countNeighborTrues(row, col, RowCells, ColCells) == 2) {
+      alive = true;
+    } else if (countNeighborTrues(row, col, RowCells, ColCells) == 3) {
+      alive = true;
+    } else {
+      alive = false;
+    }
+  }
+  public void show() {
+    if (alive) {
+      myColor = color(0);
+    } else {
+      myColor = color(200);
+    }
+    fill(myColor);
+    rect((float) myX, (float) myY, 800/ColCells, 800/RowCells);
+  }
+  public boolean mouseIn() {
+    return (mouseX >= myX && mouseY >= myY && mouseX <= myX+800/ColCells && mouseY <= myY + 800/RowCells);
+  }
+}public boolean isValidOnXbyY(int row, int col, int R, int C){
+  if (row<R && row >= 0 && col >= 0 && col < C) {
+    return true;
+  } else {
     return false;
   }
-  public void setLife(boolean living) {
-    //your code here
+}
+public int countNeighborTrues(int row, int col, int R, int C){
+  int trues = 0;
+  for (int r = row - 1; r < row + 2; r++) {
+    for (int c = col - 1; c < col + 2; c++) {
+      if (isValidOnXbyY(r, c, R, C) == false) {
+      } else {
+        if (oldCells[r][c].getLive() == true && (r != row || c != col)) {
+        trues++;
+        }
+      }
+    }
   }
+  return trues;
 }
